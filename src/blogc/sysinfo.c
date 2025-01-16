@@ -32,15 +32,25 @@ blogc_sysinfo_get_hostname(void)
 #ifndef HAVE_SYSINFO_HOSTNAME
     return NULL;
 #else
-    char buf[1024];  // could be 256 according to gethostname(2), but *shrug*.
+    char buf[1024];  // at most 256 according to gettaddrinfo/posix, but *shrug*.
     buf[1023] = '\0';
     if (-1 == gethostname(buf, 1024))
         return NULL;
 
 #ifdef HAVE_NETDB_H
-    struct hostent *h = gethostbyname(buf);
-    if (h != NULL && h->h_name != NULL)
-        return bc_strdup(h->h_name);
+    int status;
+    struct addrinfo hints = { 0 };
+    struct addrinfo *h = NULL;
+
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_CANONNAME;
+    status = getaddrinfo(buf, NULL, &hints, &h);
+    if (status == 0){
+      if (h != NULL &&  h->ai_canonname != NULL)
+	strcpy(buf, h->ai_canonname);
+      freeaddrinfo(h);
+    }
 #endif
 
     // FIXME: return FQDN instead of local host name

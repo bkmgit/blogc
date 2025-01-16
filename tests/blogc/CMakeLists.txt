@@ -22,7 +22,7 @@ blogc_executable_test(blogc sysinfo
     WRAP
         bc_file_get_contents
         getenv
-        gethostbyname
+        getaddrinfo
         gethostname
         gmtime
         time

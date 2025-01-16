@@ -19,16 +19,25 @@
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
 
-static struct hostent h = {
-    .h_name = "bola.example.com",
-};
-
-struct hostent*
-__wrap_gethostbyname(const char *name)
+int
+__wrap_getaddrinfo(const char *name,
+		   const char *service,
+                   const struct addrinfo *hints,
+                   struct addrinfo **res)
 {
-    if (0 == strcmp(name, "bola"))
-        return &h;
-    return NULL;
+  if (0 == strcmp(name, "bola")) {
+    struct addrinfo *out;
+    *res = (struct addrinfo *)malloc(sizeof(struct addrinfo*));
+    out = (struct addrinfo *)malloc(sizeof(struct addrinfo));
+    out->ai_flags = AI_CANONNAME;
+    out->ai_family = AF_INET;
+    out->ai_socktype = SOCK_STREAM;
+    out->ai_canonname = malloc(255 + 1);
+    strcpy(out->ai_canonname, "bola.example.com");
+    *res = out;
+  }
+  
+  return 0;
 }
 #endif
 
